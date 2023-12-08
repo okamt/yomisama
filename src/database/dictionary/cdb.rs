@@ -56,7 +56,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[allow(unused_variables)]
     fn basic() {
         let temp_dir = tempfile::tempdir().expect("could not create temp dir");
 
