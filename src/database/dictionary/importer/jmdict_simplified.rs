@@ -21,9 +21,7 @@ impl Importer for JMDictSimplifiedImporter {
     {
         let reader = BufReader::new(File::open(path)?);
         let mut deserializer = serde_json::Deserializer::from_reader(reader);
-        let jmdict_deserializer = JMDictDeserializer {
-            dict_builder: dict_builder,
-        };
+        let jmdict_deserializer = JMDictDeserializer { dict_builder };
         let jmdict = jmdict_deserializer.deserialize(&mut deserializer)?;
 
         Ok(jmdict.dict_builder.build()?)
@@ -327,9 +325,9 @@ where
             }
         }
 
-        Ok(deserializer.deserialize_map(JMDictVisitor {
+        deserializer.deserialize_map(JMDictVisitor {
             dict_builder: self.dict_builder,
-        })?)
+        })
     }
 }
 
