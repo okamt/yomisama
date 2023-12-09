@@ -62,8 +62,6 @@ version = "0.1.0"
 dependencies = [
  "bitcode",
  "cdb",
- "device_query",
- "selection",
  "semver",
  "serde",
  "serde_json",
