@@ -1,11 +1,15 @@
 use std::{collections::HashMap, fs::File, io::BufReader, path::Path};
 
+use semver::Version;
 use serde::{
     de::{self, DeserializeSeed, Error, SeqAccess, Visitor},
     Deserialize, Deserializer,
 };
+use url::Url;
 
-use crate::database::dictionary::{importer, DictionaryBuilder, DictionaryEntry};
+use crate::database::dictionary::{
+    importer, DictionaryBuilder, DictionaryEntry, DictionaryMetadata,
+};
 
 use super::Importer;
 
@@ -24,19 +28,44 @@ impl Importer for JMDictSimplifiedImporter {
         let jmdict_deserializer = JMDictDeserializer { dict_builder };
         let jmdict = jmdict_deserializer.deserialize(&mut deserializer)?;
 
-        Ok(jmdict.dict_builder.build()?)
+        Ok(jmdict.dict_builder.build(DictionaryMetadata {
+            name: "JMDict".to_owned(),
+            author: "Electronic Dictionary Research and Development Group (http://www.edrdg.org/edrdg/licence.html)".to_owned(),
+            version: parse_version(jmdict.dict_revisions.first().expect("JMDict dict_revisions should not be empty")).expect("invalid JMDict dict_revisions version"),
+            homepage_url: Some(Url::parse("https://github.com/scriptin/jmdict-simplified").unwrap()),
+            update_url: None,
+            notes: "".to_owned(),
+        })?)
     }
+}
+
+fn parse_version(s: &str) -> Result<Version, Box<dyn std::error::Error>> {
+    Ok(Version::parse(
+        &s.split('.')
+            .map(str::parse::<u32>)
+            .collect::<Result<Vec<u32>, _>>()?
+            .into_iter()
+            .chain(vec![0].into_iter())
+            .map(|a| a.to_string())
+            .collect::<Vec<String>>()
+            .join("."),
+    )?)
 }
 
 struct JMDict<DB>
 where
     DB: DictionaryBuilder,
 {
+    #[allow(dead_code)]
     common_only: bool,
+    #[allow(dead_code)]
     dict_date: String,
     dict_revisions: Vec<String>,
+    #[allow(dead_code)]
     languages: Vec<String>,
+    #[allow(dead_code)]
     tags: HashMap<String, String>,
+    #[allow(dead_code)]
     version: String,
     dict_builder: DB,
 }

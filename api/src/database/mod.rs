@@ -1,11 +1,13 @@
 use std::string::FromUtf8Error;
 
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use self::dictionary::{Dictionary, DictionaryResult};
 
 pub mod dictionary;
 
+#[derive(Serialize, Deserialize)]
 pub struct Database {
     dictionaries: Vec<Box<dyn Dictionary>>,
 }

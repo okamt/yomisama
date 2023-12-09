@@ -1,14 +1,4 @@
-[package]
-name = "yomisama"
-version = "0.1.0"
-edition = "2021"
+[workspace]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-bitcode = "0.5.0"
-cdb = "0.6.0"
-serde = { version = "1.0.193", features = ["derive"] }
-serde_json = "1.0.108"
-tempfile = "3.8.1"
-thiserror = "1.0.50"
+members = ["api", "program", "cli"]
+resolver = "2"
