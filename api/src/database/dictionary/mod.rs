@@ -1,6 +1,9 @@
 use std::str::Utf8Error;
 
+use semver::Version;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use url::Url;
 
 pub mod cdb;
 pub mod importer;
@@ -9,13 +12,15 @@ pub trait DictionaryBuilder {
     type Dictionary: Dictionary;
 
     fn add(&mut self, key: &str, entry: DictionaryEntry) -> Result<(), Error>;
-    fn build(self) -> Result<Self::Dictionary, Error>;
+    fn build(self, metadata: DictionaryMetadata) -> Result<Self::Dictionary, Error>;
 }
 
 pub type DictionaryResult = Result<Vec<DictionaryEntry>, Error>;
 
+#[typetag::serde(tag = "type")]
 pub trait Dictionary {
     fn get(&self, key: &str) -> DictionaryResult;
+    fn get_metadata(&self) -> &DictionaryMetadata;
 }
 
 #[derive(Error, Debug)]
@@ -43,6 +48,16 @@ impl DictionaryEntry {
     pub fn deserialize(data: &[u8]) -> Result<Self, Error> {
         bitcode::decode(data).map_err(Error::Serialization)
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub struct DictionaryMetadata {
+    name: String,
+    author: String,
+    version: Version,
+    homepage_url: Option<Url>,
+    update_url: Option<Url>,
+    notes: String,
 }
 
 #[cfg(test)]
