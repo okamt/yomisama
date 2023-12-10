@@ -6,6 +6,7 @@ use thiserror::Error;
 use url::Url;
 
 pub mod cdb;
+pub mod hashmap;
 pub mod importer;
 
 pub trait DictionaryBuilder {
