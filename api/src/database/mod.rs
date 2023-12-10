@@ -9,15 +9,21 @@ pub mod dictionary;
 
 #[derive(Serialize, Deserialize)]
 pub struct Database {
-    dictionaries: Vec<Box<dyn Dictionary>>,
+    pub dictionaries: Vec<Box<dyn Dictionary>>,
 }
 
 impl Database {
-    fn add_dictionary(&mut self, dictionary: impl Dictionary + 'static) {
+    pub fn new() -> Self {
+        Self {
+            dictionaries: Vec::new(),
+        }
+    }
+
+    pub fn add_dictionary(&mut self, dictionary: impl Dictionary + 'static) {
         self.dictionaries.push(Box::new(dictionary));
     }
 
-    fn get(&self, key: &str) -> Vec<(&dyn Dictionary, DictionaryResult)> {
+    pub fn get(&self, key: &str) -> Vec<(&dyn Dictionary, DictionaryResult)> {
         self.dictionaries
             .iter()
             .map(|d| (d.as_ref(), d.get(key)))
@@ -41,10 +47,39 @@ impl From<FromUtf8Error> for Error {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        dictionary::{hashmap::HashMapDictionaryBuilder, DictionaryBuilder, DictionaryEntry},
+        *,
+    };
 
     #[test]
     fn basic() {
-        // TODO
+        let mut database = Database::new();
+        let mut dict_builder = HashMapDictionaryBuilder::new();
+        let dict_entry = DictionaryEntry {
+            readings: vec!["あける".to_owned()],
+            gloss: "to open (a door, etc.), to unwrap (e.g. parcel, package), to unlock".to_owned(),
+            tags: vec!["P".to_owned(), "v1".to_owned(), "vt".to_owned()],
+        };
+        dict_builder.add("test", dict_entry.clone()).unwrap();
+        let dict = dict_builder.build(Default::default()).unwrap();
+        database.add_dictionary(dict.clone());
+
+        let serialized = serde_json::to_string(&database).expect("could not serialize database");
+        let deserialized =
+            serde_json::from_str::<Database>(&serialized).expect("could not deserialize database");
+
+        assert_eq!(
+            deserialized
+                .get("test")
+                .first()
+                .unwrap()
+                .1
+                .as_ref()
+                .unwrap()
+                .first()
+                .unwrap(),
+            &dict_entry
+        );
     }
 }

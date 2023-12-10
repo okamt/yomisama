@@ -34,7 +34,7 @@ pub enum Error {
     Serialization(#[from] bitcode::Error),
 }
 
-#[derive(Debug, bitcode::Encode, bitcode::Decode, PartialEq, Eq, Clone)]
+#[derive(Debug, bitcode::Encode, bitcode::Decode, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct DictionaryEntry {
     pub readings: Vec<String>,
     pub gloss: String,
@@ -59,6 +59,19 @@ pub struct DictionaryMetadata {
     homepage_url: Option<Url>,
     update_url: Option<Url>,
     notes: String,
+}
+
+impl Default for DictionaryMetadata {
+    fn default() -> Self {
+        Self {
+            name: Default::default(),
+            author: Default::default(),
+            version: Version::new(0, 0, 0),
+            homepage_url: Default::default(),
+            update_url: Default::default(),
+            notes: Default::default(),
+        }
+    }
 }
 
 #[cfg(test)]
