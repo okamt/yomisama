@@ -14,7 +14,6 @@ pub trait DictionaryBuilder {
     fn build(self, metadata: DictionaryMetadata) -> Result<Self::Dictionary, Self::Error>;
 }
 
-#[typetag::serde(tag = "type")]
 pub trait Dictionary {
     fn get(&self, key: &str) -> Vec<DictionaryEntry>;
     fn get_metadata(&self) -> &DictionaryMetadata;

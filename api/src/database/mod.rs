@@ -5,31 +5,30 @@ use self::dictionary::{Dictionary, DictionaryEntry};
 pub mod dictionary;
 
 #[derive(Serialize, Deserialize)]
-pub struct Database {
-    pub dictionaries: Vec<Box<dyn Dictionary>>,
+pub struct Database<D: Dictionary> {
+    pub dictionaries: Vec<D>,
 }
 
-impl Database {
+impl<D: Dictionary> Database<D> {
     pub fn new() -> Self {
         Self {
             dictionaries: Vec::new(),
         }
     }
 
-    pub fn add_dictionary(&mut self, dictionary: impl Dictionary + 'static) {
-        self.dictionaries.push(Box::new(dictionary));
+    pub fn add_dictionary(&mut self, dictionary: D) {
+        self.dictionaries.push(dictionary);
     }
 
-    pub fn get(&self, key: &str) -> Vec<(&dyn Dictionary, Vec<DictionaryEntry>)> {
-        self.dictionaries
-            .iter()
-            .map(|d| (d.as_ref(), d.get(key)))
-            .collect()
+    pub fn get(&self, key: &str) -> Vec<(&D, Vec<DictionaryEntry>)> {
+        self.dictionaries.iter().map(|d| (d, d.get(key))).collect()
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::database::dictionary::hashmap::HashMapDictionary;
+
     use super::{
         dictionary::{hashmap::HashMapDictionaryBuilder, DictionaryBuilder, DictionaryEntry},
         *,
@@ -49,8 +48,8 @@ mod tests {
         database.add_dictionary(dict.clone());
 
         let serialized = serde_json::to_string(&database).expect("could not serialize database");
-        let deserialized =
-            serde_json::from_str::<Database>(&serialized).expect("could not deserialize database");
+        let deserialized = serde_json::from_str::<Database<HashMapDictionary>>(&serialized)
+            .expect("could not deserialize database");
 
         assert_eq!(
             deserialized.get("test").first().unwrap().1.first().unwrap(),
