@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
-use super::{Dictionary, DictionaryBuilder, DictionaryEntry, DictionaryMetadata, DictionaryResult};
+use super::{Dictionary, DictionaryBuilder, DictionaryEntry, DictionaryMetadata};
 
 pub struct HashMapDictionaryBuilder {
     hashmap: HashMap<String, DictionaryEntry>,
@@ -18,19 +19,23 @@ impl HashMapDictionaryBuilder {
 
 impl DictionaryBuilder for HashMapDictionaryBuilder {
     type Dictionary = HashMapDictionary;
+    type Error = Error;
 
-    fn add(&mut self, key: &str, entry: DictionaryEntry) -> Result<(), super::Error> {
+    fn add(&mut self, key: &str, entry: DictionaryEntry) -> Result<(), Self::Error> {
         self.hashmap.insert(key.to_owned(), entry);
         Ok(())
     }
 
-    fn build(self, metadata: DictionaryMetadata) -> Result<Self::Dictionary, super::Error> {
+    fn build(self, metadata: DictionaryMetadata) -> Result<Self::Dictionary, Self::Error> {
         Ok(HashMapDictionary {
             hashmap: self.hashmap,
             metadata,
         })
     }
 }
+
+#[derive(Debug, Error)]
+pub enum Error {}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct HashMapDictionary {
@@ -40,13 +45,12 @@ pub struct HashMapDictionary {
 
 #[typetag::serde]
 impl Dictionary for HashMapDictionary {
-    fn get(&self, key: &str) -> DictionaryResult {
-        Ok(self
-            .hashmap
+    fn get(&self, key: &str) -> Vec<DictionaryEntry> {
+        self.hashmap
             .get(key)
             .map(Clone::clone)
             .into_iter()
-            .collect())
+            .collect()
     }
 
     fn get_metadata(&self) -> &DictionaryMetadata {
