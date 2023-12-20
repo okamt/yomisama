@@ -12,6 +12,14 @@ use program::{
 use tauri::Manager;
 
 fn main() {
+    std::panic::set_hook(Box::new(|panic_info| {
+        tauri::api::dialog::blocking::message(
+            None::<&tauri::Window>,
+            "Yomisama - Error",
+            format!("{}", panic_info),
+        );
+    }));
+
     let app_state = AppState::default();
 
     if Path::new(DEFAULT_CONFIG_FILE_PATH.as_str()).exists() {
