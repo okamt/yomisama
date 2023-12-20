@@ -10,6 +10,8 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, Runtime, Window};
 
+use crate::settings::DEFAULT_CONFIG_DIRECTORY_PATH;
+
 static NEXT_WINDOW_ID: AtomicU64 = AtomicU64::new(0);
 static PAYLOAD_QUEUE: Lazy<Mutex<HashMap<u64, Payload>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
@@ -70,11 +72,12 @@ pub fn spawn_first_time_setup_window<M: Manager<R>, R: Runtime>(
     .decorations(false)
     .build()?;
 
-    let mut pathbuf = dirs::config_dir().unwrap();
-    pathbuf.push("yomisama");
-    let default_config_dir = pathbuf.to_str().unwrap().to_owned();
-
-    queue_payload(&window, Payload::FirstTimeSetup { default_config_dir });
+    queue_payload(
+        &window,
+        Payload::FirstTimeSetup {
+            default_config_dir: DEFAULT_CONFIG_DIRECTORY_PATH.clone(),
+        },
+    );
 
     Ok(window)
 }
