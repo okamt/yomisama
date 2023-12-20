@@ -2,9 +2,10 @@ use std::{collections::HashMap, fs::File, io::BufReader, path::Path};
 
 use semver::Version;
 use serde::{
-    de::{self, DeserializeSeed, Error, SeqAccess, Visitor},
+    de::{self, DeserializeSeed, Error as _, SeqAccess, Visitor},
     Deserialize, Deserializer,
 };
+use thiserror::Error;
 use url::Url;
 
 use crate::database::dictionary::{
@@ -13,20 +14,26 @@ use crate::database::dictionary::{
 
 use super::Importer;
 
+#[derive(Debug)]
 pub struct JMDictSimplifiedImporter {}
 
 impl Importer for JMDictSimplifiedImporter {
+    type Error = Error;
+
     fn import<DB>(
         path: impl AsRef<Path>,
         dict_builder: DB,
-    ) -> Result<DB::Dictionary, importer::Error>
+    ) -> Result<DB::Dictionary, importer::Error<Self::Error, DB::Error>>
     where
         DB: DictionaryBuilder,
     {
-        let reader = BufReader::new(File::open(path)?);
+        let reader = BufReader::new(File::open(path).map_err(importer::Error::DictFileIo)?);
         let mut deserializer = serde_json::Deserializer::from_reader(reader);
         let jmdict_deserializer = JMDictDeserializer { dict_builder };
-        let jmdict = jmdict_deserializer.deserialize(&mut deserializer)?;
+        let jmdict = jmdict_deserializer
+            .deserialize(&mut deserializer)
+            .map_err(Error::Deserialization)
+            .map_err(importer::Error::ImporterSpecific)?;
 
         Ok(jmdict.dict_builder.build(DictionaryMetadata {
             name: "JMDict".to_owned(),
@@ -35,7 +42,7 @@ impl Importer for JMDictSimplifiedImporter {
             homepage_url: Some(Url::parse("https://github.com/scriptin/jmdict-simplified").unwrap()),
             update_url: None,
             notes: "".to_owned(),
-        })?)
+        }).map_err(importer::Error::DictBuilder)?)
     }
 }
 
@@ -50,6 +57,12 @@ fn parse_version(s: &str) -> Result<Version, Box<dyn std::error::Error>> {
             .collect::<Vec<String>>()
             .join("."),
     )?)
+}
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("JMDict Simplified JSON deserialization error")]
+    Deserialization(#[from] serde_json::Error),
 }
 
 struct JMDict<DB>
@@ -400,7 +413,7 @@ mod tests {
         let jmdict = JMDictSimplifiedImporter::import(&dict_path, dict_builder)
             .expect("error while importing dictionary file");
 
-        let expected = r#"Ok([DictionaryEntry { readings: ["あそこ", "あすこ", "かしこ", "あしこ", "あこ"], gloss: "there\nover there\nthat place\nyonder\nyou-know-where", tags: ["uk", "pn"] }, DictionaryEntry { readings: ["あそこ", "あすこ", "かしこ", "あしこ", "あこ"], gloss: "genitals\nprivate parts\nnether regions", tags: ["col", "uk", "euph", "n"] }, DictionaryEntry { readings: ["あそこ", "あすこ", "かしこ", "あしこ", "あこ"], gloss: "that far\nthat much\nthat point", tags: ["uk", "n"] }])"#;
+        let expected = r#"[DictionaryEntry { readings: ["あそこ", "あすこ", "かしこ", "あしこ", "あこ"], gloss: "there\nover there\nthat place\nyonder\nyou-know-where", tags: ["uk", "pn"] }, DictionaryEntry { readings: ["あそこ", "あすこ", "かしこ", "あしこ", "あこ"], gloss: "genitals\nprivate parts\nnether regions", tags: ["col", "uk", "euph", "n"] }, DictionaryEntry { readings: ["あそこ", "あすこ", "かしこ", "あしこ", "あこ"], gloss: "that far\nthat much\nthat point", tags: ["uk", "n"] }]"#;
         assert_eq!(format!("{:?}", jmdict.get("彼処")), expected);
     }
 }

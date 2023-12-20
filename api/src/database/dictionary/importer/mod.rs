@@ -3,22 +3,26 @@ use std::path::Path;
 use thiserror::Error;
 
 use super::DictionaryBuilder;
-use crate::database::dictionary;
 
 pub mod jmdict_simplified;
 
-pub trait Importer {
-    fn import<DB>(path: impl AsRef<Path>, dict_builder: DB) -> Result<DB::Dictionary, Error>
+pub trait Importer: Sized {
+    type Error: std::error::Error;
+
+    fn import<DB>(
+        path: impl AsRef<Path>,
+        dict_builder: DB,
+    ) -> Result<DB::Dictionary, Error<Self::Error, DB::Error>>
     where
         DB: DictionaryBuilder;
 }
 
 #[derive(Debug, Error)]
-pub enum Error {
-    #[error("dictionary importing io error")]
-    Io(#[from] std::io::Error),
-    #[error("dictionary JSON parsing error")]
-    Serde(#[from] serde_json::Error),
+pub enum Error<IE: std::error::Error, DBE: std::error::Error> {
+    #[error("dictionary file IO error")]
+    DictFileIo(std::io::Error),
     #[error(transparent)]
-    Dictionary(#[from] dictionary::Error),
+    DictBuilder(DBE),
+    #[error(transparent)]
+    ImporterSpecific(IE),
 }

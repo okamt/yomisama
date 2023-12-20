@@ -5,6 +5,7 @@ use serde::{
     de::{self, Visitor},
     ser, Deserialize, Deserializer, Serialize, Serializer,
 };
+use thiserror::Error;
 
 use super::{Dictionary, DictionaryBuilder, DictionaryEntry, DictionaryMetadata};
 
@@ -24,20 +25,27 @@ impl CDBDictionaryBuilder {
 
 impl DictionaryBuilder for CDBDictionaryBuilder {
     type Dictionary = CDBDictionary;
+    type Error = CDBDictionaryBuilderError;
 
-    fn add(&mut self, key: &str, entry: DictionaryEntry) -> Result<(), super::Error> {
+    fn add(&mut self, key: &str, entry: DictionaryEntry) -> Result<(), Self::Error> {
         self.cdb_writer
-            .add(key.as_bytes(), &entry.serialize()?)
-            .map_err(super::Error::Io)
+            .add(key.as_bytes(), &entry.serialize_fast())
+            .map_err(Self::Error::CDBFileIo)
     }
 
-    fn build(self, metadata: DictionaryMetadata) -> Result<Self::Dictionary, super::Error> {
-        self.cdb_writer.finish().map_err(super::Error::Io)?;
+    fn build(self, metadata: DictionaryMetadata) -> Result<Self::Dictionary, Self::Error> {
+        self.cdb_writer.finish()?;
         Ok(Self::Dictionary {
             cdb_pathbuf: (CDB::open(&self.path)?, self.path),
             metadata,
         })
     }
+}
+
+#[derive(Debug, Error)]
+pub enum CDBDictionaryBuilderError {
+    #[error("CDB file io error")]
+    CDBFileIo(#[from] std::io::Error),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -88,14 +96,12 @@ where
 
 #[typetag::serde]
 impl Dictionary for CDBDictionary {
-    fn get(&self, key: &str) -> Result<Vec<DictionaryEntry>, super::Error> {
+    fn get(&self, key: &str) -> Vec<DictionaryEntry> {
         self.cdb_pathbuf
             .0
             .find(key.as_bytes())
-            .map(|r| {
-                r.map_err(super::Error::Io)
-                    .and_then(|ref v| DictionaryEntry::deserialize(v))
-            })
+            .filter_map(Result::ok)
+            .map(|v| DictionaryEntry::deserialize_fast(&v))
             .collect()
     }
 
@@ -149,9 +155,9 @@ mod tests {
         };
         let cdb_dict = cdb_dict_builder.build(metadata.clone()).unwrap();
 
-        assert_eq!(*cdb_dict.get("test1").unwrap().first().unwrap(), test1);
-        assert_eq!(*cdb_dict.get("test2").unwrap().first().unwrap(), test2);
-        assert!(cdb_dict.get("test3").unwrap().is_empty());
+        assert_eq!(*cdb_dict.get("test1").first().unwrap(), test1);
+        assert_eq!(*cdb_dict.get("test2").first().unwrap(), test2);
+        assert!(cdb_dict.get("test3").is_empty());
         assert_eq!(cdb_dict.get_metadata(), &metadata);
     }
 }
