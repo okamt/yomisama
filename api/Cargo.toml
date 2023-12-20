@@ -13,5 +13,4 @@ serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 tempfile = "3.8.1"
 thiserror = "1.0.50"
-typetag = "0.2.13"
 url = { version = "2.5.0", features = ["serde"] }

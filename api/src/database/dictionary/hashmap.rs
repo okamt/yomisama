@@ -43,7 +43,6 @@ pub struct HashMapDictionary {
     metadata: DictionaryMetadata,
 }
 
-#[typetag::serde]
 impl Dictionary for HashMapDictionary {
     fn get(&self, key: &str) -> Vec<DictionaryEntry> {
         self.hashmap

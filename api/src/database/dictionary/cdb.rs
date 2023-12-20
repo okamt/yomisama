@@ -94,7 +94,6 @@ where
     deserializer.deserialize_str(CDBPathBufVisitor)
 }
 
-#[typetag::serde]
 impl Dictionary for CDBDictionary {
     fn get(&self, key: &str) -> Vec<DictionaryEntry> {
         self.cdb_pathbuf
