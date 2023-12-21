@@ -10,7 +10,7 @@ default-run = "program"
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.5", features = [
+tauri = { version = "1.5", features = [ "system-tray",
     "window-all",
     "shell-open",
     "dialog-all",

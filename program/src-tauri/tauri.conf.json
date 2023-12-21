@@ -38,6 +38,10 @@
     "security": {
       "csp": null
     },
-    "windows": []
+    "windows": [],
+    "systemTray": {
+      "iconPath": "icons/logo.png",
+      "iconAsTemplate": true
+    }
   }
 }

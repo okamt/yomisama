@@ -7,6 +7,7 @@ use program::{
     commands::*,
     settings::{SettingsFile, DEFAULT_CONFIG_FILE_PATH},
     state::AppState,
+    tray::{handle_system_tray_event, make_system_tray},
     windows::spawn_first_time_setup_window,
 };
 use tauri::Manager;
@@ -35,6 +36,8 @@ fn main() {
     }
 
     let app = tauri::Builder::default()
+        .system_tray(make_system_tray())
+        .on_system_tray_event(handle_system_tray_event)
         .manage(app_state)
         .invoke_handler(tauri::generate_handler![
             set_config_dir,
@@ -52,5 +55,10 @@ fn main() {
         }
     }
 
-    app.run(|_, _| {});
+    app.run(|_app, event| match event {
+        tauri::RunEvent::ExitRequested { api, .. } => {
+            api.prevent_exit();
+        }
+        _ => {}
+    });
 }
