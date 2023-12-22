@@ -2,9 +2,8 @@ use std::sync::RwLock;
 
 use once_cell::sync::OnceCell;
 
-use crate::settings::Settings;
+use crate::config::Config;
 
-#[derive(Default)]
 pub struct AppState {
-    pub settings: OnceCell<RwLock<Settings>>,
+    pub config: OnceCell<RwLock<Config>>,
 }

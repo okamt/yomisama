@@ -10,7 +10,8 @@ default-run = "program"
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.5", features = [ "system-tray",
+tauri = { version = "1.5", features = [
+    "system-tray",
     "window-all",
     "shell-open",
     "dialog-all",
@@ -21,6 +22,8 @@ dirs = "5.0.1"
 thiserror = "1.0.50"
 once_cell = "1.19.0"
 api = { path = "../../api" }
+sob = "0.0.1"
+typescript-type-def = { version = "0.5.9", features = ["json_value"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

@@ -9,8 +9,9 @@ use std::{
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, Runtime, Window};
+use typescript_type_def::TypeDef;
 
-use crate::settings::DEFAULT_CONFIG_DIRECTORY_PATH;
+use crate::config::DEFAULT_CONFIG_DIRECTORY_PATH;
 
 static NEXT_WINDOW_ID: AtomicU64 = AtomicU64::new(0);
 static PAYLOAD_QUEUE: Lazy<Mutex<HashMap<u64, Payload>>> = Lazy::new(|| Mutex::new(HashMap::new()));
@@ -26,10 +27,13 @@ fn get_window_label() -> String {
     get_next_window_id().to_string()
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(untagged, rename_all_fields = "camelCase")]
+#[derive(Debug, Serialize, Deserialize, Clone, TypeDef)]
+#[serde(untagged)]
 pub enum Payload {
-    FirstTimeSetup { default_config_dir: String },
+    #[serde(rename_all = "camelCase")]
+    FirstTimeSetup {
+        default_config_dir: String,
+    },
     Empty,
 }
 

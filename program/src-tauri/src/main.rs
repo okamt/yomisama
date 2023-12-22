@@ -1,11 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{path::Path, sync::RwLock};
+use std::sync::RwLock;
 
+use once_cell::sync::OnceCell;
 use program::{
     commands::*,
-    settings::{SettingsFile, DEFAULT_CONFIG_FILE_PATH},
+    config::Config,
     state::AppState,
     tray::{handle_system_tray_event, make_system_tray},
     windows::spawn_first_time_setup_window,
@@ -21,18 +22,13 @@ fn main() {
         );
     }));
 
-    let app_state = AppState::default();
+    let app_state = AppState {
+        config: OnceCell::new(),
+    };
 
-    if Path::new(DEFAULT_CONFIG_FILE_PATH.as_str()).exists() {
-        let settings_file = SettingsFile::read_from_file(DEFAULT_CONFIG_FILE_PATH.as_str())
-            .expect("could not read default config file");
-        app_state.settings.get_or_init(|| {
-            RwLock::new(
-                settings_file
-                    .into_settings()
-                    .expect("could not read config file"),
-            )
-        });
+    if Config::exists() {
+        let config = Config::read().expect("could not read settings file");
+        app_state.config.get_or_init(|| RwLock::new(config));
     }
 
     let app = tauri::Builder::default()
@@ -50,7 +46,7 @@ fn main() {
     {
         let state = app.state::<AppState>();
 
-        if state.settings.get().is_none() {
+        if state.config.get().is_none() {
             spawn_first_time_setup_window(&app).expect("could not spawn first time setup window");
         }
     }
