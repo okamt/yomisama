@@ -1,3 +1,5 @@
+//! Configuration and settings module.
+
 use std::path::{Path, PathBuf};
 
 use api::database::{dictionary::cdb::CDBDictionary, Database};
@@ -30,13 +32,13 @@ pub const CONFIG_FILE_NAME: &str = "config.json";
 /// Configuration data.
 ///
 /// Represents data being stored in the configuration directory, such as settings and dictionaries.
-/// Can only be obtained through `Config::new()` or `Config::read()`.
+/// Can only be obtained through [`Config::new()`] or [`Config::read()`].
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     pub settings: Settings,
     pub database: Database<CDBDictionary>,
-    // This shouldn't be serialized because if a `Config` is being deserialized, we obviously know where the file is.
-    // A `Config` will only ever be deserialized from `Config::read()`.
+    // This shouldn't be serialized because if a [`Config`] is being deserialized, we obviously know where the file is.
+    // A [`Config`] will only ever be deserialized from [`Config::read()`].
     #[serde(skip)]
     path: ConfigFilePath,
 }
@@ -48,6 +50,7 @@ pub struct Config {
 pub struct Settings {}
 
 impl Config {
+    /// Creates a new configuration file, overwriting any existing file.
     pub fn new(path: ConfigFilePath) -> Result<Self, ConfigFileWriteError> {
         let config = Self {
             settings: Default::default(),
@@ -58,10 +61,12 @@ impl Config {
         Ok(config)
     }
 
+    /// Checks if the default configuration file path exists.
     pub fn exists() -> bool {
         ConfigFilePath::Default.as_path().exists()
     }
 
+    /// Reads configuration from the appropriate file.
     pub fn read() -> Result<Self, ConfigFileReadError> {
         let config_file: ConfigFile =
             serde_json::from_slice(&std::fs::read(ConfigFilePath::Default.as_path())?)
@@ -87,10 +92,12 @@ impl Config {
         Ok(config)
     }
 
+    /// Gets the [`ConfigFilePath`].
     pub fn get_path(&self) -> &ConfigFilePath {
         &self.path
     }
 
+    /// Writes the configuration file, overwriting any existing file.
     pub fn write(&self) -> Result<(), ConfigFileWriteError> {
         let default_config_dir = Path::new(DEFAULT_CONFIG_DIRECTORY_PATH.as_str());
         if !default_config_dir.exists() {
@@ -117,10 +124,10 @@ impl Config {
 /// A path to the actual config file.
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub enum ConfigFilePath {
-    // Default path based on the OS's default configuration directory.
+    /// Default path based on the OS's default configuration directory.
     #[default]
     Default,
-    // Custom configuration directory path.
+    /// Custom configuration directory path.
     Custom(PathBuf),
 }
 
@@ -133,16 +140,16 @@ impl ConfigFilePath {
     }
 }
 
-/// A config file.
+/// A configuration file.
 ///
-/// Represents a `config.json` file in a configuration directory. Used purely for serialization and deserialization.
-/// `Sob` is used here so we can serialize a borrowed `Config`, while deserializing to an owned `Config`.
-/// `Cow` can't be used instead since it requires the inner type to implement `Clone`.
+/// Represents a `config.json` file in a configuration directory. Used purely for serialization and deserialization, so should not be public.
+/// [`Sob`] is used here so we can serialize a borrowed [`Config`], while deserializing to an owned [`Config`].
+/// [`Cow`] can't be used instead since it requires the inner type to implement [`Clone`].
 #[derive(Serialize, Deserialize)]
 enum ConfigFile<'a> {
-    // A file containing actual configuration data.
+    /// A file containing actual configuration data.
     Config(Sob<'a, Config>),
-    // A redirect to the actual configuration file path.
+    /// A redirect to the actual configuration file path.
     Redirect(PathBuf),
 }
 
