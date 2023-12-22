@@ -1,17 +1,18 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
   import { appWindow } from "@tauri-apps/api/window";
+  import type { Payload } from "./bindings";
   import FirstTimeSetup from "./lib/FirstTimeSetup.svelte";
   import Loading from "./lib/Loading.svelte";
 
-  let payload: any;
+  let payload: Payload | undefined = undefined;
 
   appWindow.onCloseRequested(async (_event) => {
     await invoke("window_unloading");
   });
 
   const init = (async function () {
-    if (payload) {
+    if (payload !== undefined) {
       return;
     }
 
