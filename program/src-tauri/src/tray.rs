@@ -1,3 +1,5 @@
+//! Tauri system tray module.
+
 use tauri::{
     AppHandle, CustomMenuItem, Runtime, SystemTray, SystemTrayEvent, SystemTrayMenu,
     SystemTrayMenuItem,
@@ -47,7 +49,7 @@ pub fn handle_system_tray_event(_app: &AppHandle<impl Runtime>, event: SystemTra
         SystemTrayEvent::MenuItemClick { id, .. } => {
             match id.as_str() {
                 "settings" => {
-                    // open settings menu
+                    // TODO open settings menu
                 }
                 "quit" => {
                     std::process::exit(0);

@@ -1,3 +1,12 @@
+//! Window creation and management module.
+//!
+//! Since Tauri has no built-in functionality for passing data to a newly created window, this module implements its own system:
+//! - Window is created through [`tauri::WindowBuilder`], its label set to an unique ID (auto increment [`AtomicU64`])
+//! - A [`Payload`] associated to the ID is inserted into `PAYLOAD_QUEUE`.
+//! - The base frontend component `App.svelte` invokes [`window_loaded`] when ready.
+//! - [`window_loaded`] fetches the associated [`Payload`] and returns it, but doesn't remove it from `PAYLOAD_QUEUE` (since that would break hot reloading).
+//! - When a window requests to be closed, `App.svelte` invokes [`window_unloading`], which finally deletes the payload.
+
 use std::{
     collections::HashMap,
     sync::{
@@ -27,6 +36,7 @@ fn get_window_label() -> String {
     get_next_window_id().to_string()
 }
 
+/// Payload data to be sent to newly created windows.
 #[derive(Debug, Serialize, Deserialize, Clone, TypeDef)]
 #[serde(untagged)]
 pub enum Payload {

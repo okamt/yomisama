@@ -1,3 +1,5 @@
+//! Tauri commands module.
+
 use std::{path::PathBuf, sync::RwLock};
 
 use thiserror::Error;
@@ -7,6 +9,9 @@ use crate::{
     state::AppState,
 };
 
+/// Sets up the app configuration if it's not already set up.
+///
+/// If `path` is None, the default configuration directory path is used.
 #[tauri::command(rename_all = "snake_case")]
 pub fn set_config_dir(path: Option<String>, state: tauri::State<AppState>) -> Result<(), Error> {
     let config_path = match path {

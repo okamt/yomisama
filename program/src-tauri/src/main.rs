@@ -53,6 +53,8 @@ fn main() {
 
     app.run(|_app, event| match event {
         tauri::RunEvent::ExitRequested { api, .. } => {
+            // When the last open window is closed, Tauri tries to exit the program.
+            // In this case we want the app to keep running on the background, until it's closed through the tray menu.
             api.prevent_exit();
         }
         _ => {}
