@@ -27,7 +27,7 @@ fn main() {
     };
 
     if Config::exists() {
-        let config = Config::read().expect("could not read settings file");
+        let config = Config::read().expect("could not read config file");
         app_state.config.get_or_init(|| RwLock::new(config));
     }
 
