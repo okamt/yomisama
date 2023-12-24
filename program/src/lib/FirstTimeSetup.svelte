@@ -5,7 +5,7 @@
 
   const STEPS = 3;
   let step = 0;
-  export let payload: any;
+  export let defaultConfigDir = "";
   let errorMessage = "";
 
   function chooseConfigDir(path: any): Promise<any> {
@@ -46,7 +46,7 @@
                   <div>Use default configuration directory</div>
                   <div class="text-xs pt-1">
                     <span class="break-all font-mono font-normal"
-                      >{payload.defaultConfigDir}</span
+                      >{defaultConfigDir}</span
                     >
                   </div>
                 </div>
