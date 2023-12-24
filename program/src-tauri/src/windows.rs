@@ -37,14 +37,16 @@ fn get_window_label() -> String {
 }
 
 /// Payload data to be sent to newly created windows.
+///
+/// Each variant must correspond to the name of a Svelte component.
 #[derive(Debug, Serialize, Deserialize, Clone, TypeDef)]
-#[serde(untagged)]
+#[serde(tag = "component")]
 pub enum Payload {
     #[serde(rename_all = "camelCase")]
     FirstTimeSetup {
         default_config_dir: String,
     },
-    Empty,
+    Query,
 }
 
 fn queue_payload(window: &Window<impl Runtime>, payload: Payload) {

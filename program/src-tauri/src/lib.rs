@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod config;
+pub mod query;
 pub mod state;
 pub mod tray;
 pub mod windows;
