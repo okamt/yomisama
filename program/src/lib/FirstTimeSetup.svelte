@@ -7,11 +7,15 @@
   let step = 0;
   export let defaultConfigDir = "";
   let errorMessage = "";
+  let dictModal: HTMLDialogElement;
 
-  function chooseConfigDir(path: any): Promise<any> {
-    return invoke("set_config_dir", { path })
-      .then(() => (step = 1))
-      .catch((error) => (errorMessage = error));
+  async function chooseConfigDir(path: any): Promise<any> {
+    try {
+      await invoke("set_config_dir", { path });
+      return (step = 1);
+    } catch (error: any) {
+      return (errorMessage = error.toString());
+    }
   }
 
   async function chooseAnotherConfigDir() {
@@ -64,9 +68,65 @@
         </div>
       {:else if step == 1}
         <h1 class="text-center text-3xl">Import dictionaries</h1>
-        <div class="self-center">
-          <button class="btn" on:click={() => (step = 2)}> TODO </button>
+        <div class="flex justify-center gap-x-8">
+          <div>
+            <input
+              type="file"
+              class="file-input file-input-bordered w-full max-w-xs"
+            />
+          </div>
+          <div class="self-center">
+            <button class="btn" on:click={() => (step = 2)}> OK </button>
+          </div>
         </div>
+        <button class="btn" on:click={() => dictModal.showModal()}
+          >open modal</button
+        >
+        <dialog bind:this={dictModal} class="modal">
+          <div class="modal-box">
+            <!--<form method="dialog">
+              <button
+                class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                >✕</button
+              >
+            </form>-->
+            <!--<h3 class="font-bold text-lg">Hello!</h3>-->
+            <!--<p class="py-4"></p>-->
+            <div
+              class="overflow-x-auto flex flex-col justify-items-center space-y-8"
+            >
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <th>Title</th>
+                    <td>JMDict</td>
+                  </tr>
+                  <tr>
+                    <th>Authors</th>
+                    <td
+                      >Electronic Dictionary Research and Development Group
+                      (http://www.edrdg.org/edrdg/licence.html)</td
+                    >
+                  </tr>
+                  <tr>
+                    <th>Version</th>
+                    <td>1.09</td>
+                  </tr>
+                  <tr>
+                    <th>Homepage</th>
+                    <td>https://github.com/scriptin/jmdict-simplified</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="flex gap-8 items-center self-center">
+                <button class="btn btn-primary outline-none">Import</button>
+                <form method="dialog">
+                  <button class="btn outline-none">Cancel</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </dialog>
       {:else if step == 2}
         <h1 class="text-center text-3xl">All done!</h1>
         <div class="self-center">
