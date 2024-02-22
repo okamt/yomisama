@@ -1,4 +1,4 @@
 [workspace]
 
-members = ["api", "program/src-tauri", "cli"]
+members = ["api", "cli", "program"]
 resolver = "2"
